@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATM System</title>
+</head>
+
+<body>
+  <h1>ATM System</h1>
+
+  <div id="loginForm">
+    <h2>Login</h2>
+    <label for="accountNumber">Account Number:</label><br>
+    <input type="text" id="accountNumber" value="1234" required>
+    <br>
+    <label for="pin">PIN:</label><br>
+    <input type="password" id="pin" value="1234" required>
+    <br>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="menuForm" style="display:none;">
+    <div id="viewBalanceForm">
+      <h2>View Account Balance</h2>
+      <button onclick="viewBalance()">View Balance</button>
+      <p id="balanceResult"></p>
+    </div>
+
+    <div id="withdrawForm">
+      <hr>
+      <h2>Withdraw Money</h2>
+      <label for="withdrawAmount">Amount:</label><br>
+      <input type="number" id="withdrawAmount" required>
+      <br>
+      <button onclick="withdraw()">Withdraw</button>
+    </div>
+
+    <div id="depositForm">
+      <hr>
+      <h2>Deposit Money</h2>
+      <label for="depositAmount">Amount:</label><br>
+      <input type="number" id="depositAmount" required>
+      <br>
+      <button onclick="deposit()">Deposit</button>
+    </div>
+
+    <div id="transferForm">
+      <hr>
+      <h2>Transfer Money</h2>
+      <label for="destinationAccountNumber">Destination Account Number:</label><br>
+      <input type="text" id="destinationAccountNumber" required>
+      <br>
+      <label for="transferAmount">Amount:</label><br>
+      <input type="number" id="transferAmount" required>
+      <br>
+      <button onclick="transfer()">Transfer</button>
+    </div>
+    
+    <div id="transactionHistory">
+      <hr>
+      <h2>Transaction History</h2>
+      <a href="/download" target="_blank">Download Transaction History</a>
+      <br><br>
+      <button onclick="viewTransactionHistory()">Load Transaction History</button>
+      <table id="transactionTable" border="1">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="transactionTableBody"></tbody>
+      </table>
+      <hr>
+    </div>
+  </div>
+  <script>
+    async function viewBalance() {
+      const accountNumber = document.getElementById('accountNumber').value;
+      const pin = document.getElementById('pin').value;
+
+      const response = await fetch('/balance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accountNumber, pin })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        document.getElementById('balanceResult').innerText = 'Current balance: $' + data.balance;
+      } else {
+        alert('Failed to fetch balance. ' + data.error);
+      }
+    }
+
+    async function login() {
+      const accountNumber = document.getElementById('accountNumber').value;
+      const pin = document.getElementById('pin').value;
+
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accountNumber, pin })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('menuForm').style.display = 'block';
+      } else {
+        alert('Login failed. ' + data.error);
+      }
+    }
+
+    async function withdraw() {
+      const accountNumber = document.getElementById('accountNumber').value;
+      const pin = document.getElementById('pin').value;
+      const amount = document.getElementById('withdrawAmount').value;
+
+      const response = await fetch('/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accountNumber, pin, amount })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Withdrawal successful!');
+      } else {
+        alert('Withdrawal failed. ' + data.error);
+      }
+    }
+
+    async function deposit() {
+      const accountNumber = document.getElementById('accountNumber').value;
+      const pin = document.getElementById('pin').value;
+      const amount = document.getElementById('depositAmount').value;
+
+      const response = await fetch('/deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accountNumber, pin, amount })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Deposit successful!');
+      } else {
+        alert('Deposit failed. ' + data.error);
+      }
+    }
+
+    async function transfer() {
+      const sourceAccountNumber = document.getElementById('accountNumber').value;
+      const destinationAccountNumber = document.getElementById('destinationAccountNumber').value;
+      const amount = document.getElementById('transferAmount').value;
+
+      const response = await fetch('/transfer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sourceAccountNumber, destinationAccountNumber, amount })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Transfer successful!');
+      } else {
+        alert('Transfer failed. ' + data.error);
+      }
+    }
+
+    async function viewTransactionHistory() {
+      const response = await fetch('/transaction_history', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+      if (result.success) {
+      const transactionTableBody = document.getElementById('transactionTableBody');
+      transactionTableBody.innerHTML = ''; // Clear existing content
+
+      result.data.forEach(transaction => {
+        const row = document.createElement('tr');
+        const typeCell = document.createElement('td');
+        typeCell.innerText = transaction.type;
+        const dateCell = document.createElement('td');
+        dateCell.innerText = transaction.date;
+        const amountCell = document.createElement('td');
+        amountCell.innerText = transaction.amount;
+        const descCell = document.createElement('td');
+        descCell.innerText = transaction.description;
+
+        row.appendChild(typeCell);
+        row.appendChild(dateCell);
+        row.appendChild(amountCell);
+        row.appendChild(descCell);
+
+        transactionTableBody.appendChild(row);
+      });
+    } else {
+      alert('Failed to fetch transaction history. ' + data.error);
+    }
+    }
+  </script>
+</body>
+
+</html>
